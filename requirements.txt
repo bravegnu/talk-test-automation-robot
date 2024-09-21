@@ -1,0 +1,5 @@
+robotframework-parrot-relaycontroller
+python-can
+robotframework-sshlibrary
+imutils
+opencv-contrib-python

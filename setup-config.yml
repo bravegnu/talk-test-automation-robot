@@ -1,0 +1,9 @@
+can_channel: can0
+button_serialdev:  /dev/ttyUSB0
+speedgauge_region: [627, 472, 289, 137]
+version_region: [406, 362, 166, 92]
+hostname: 192.168.1.1
+username: rpicam3
+password: rpicam3
+image: crop-image.png
+img: final-image.png
