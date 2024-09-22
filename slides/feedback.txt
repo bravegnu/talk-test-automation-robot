@@ -1,0 +1,15 @@
+* Reduce Content Syntax of Suite Format - Robot Framework - Done
+* Domain expert friendly syntax - Done
+* Proprietary Tools - Done
+* Slide 27 - keep one keyword definition. - Done
+* Open source - Parrot Project Reference. - Done
+* OBD-II Port to CAN Adaptor not visible
+* Wait for sometime after displaying speed / version - Done
+* Keep only 4 windows open - Done
+* Add setup photo and mark components - Done
+* Cantact Photo can be used to CAN to USB
+
+Before Talk
+
+* Run setup.sh
+* Themes for Emacs and Terminal

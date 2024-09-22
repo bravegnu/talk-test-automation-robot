@@ -1,0 +1,338 @@
+= Transforming Automotive Electronics Testing with Python and Robot Framework
+Vijay Kumar B. <vijaykumar@bravegnu.org>
+
+== Introduction
+
+=== About Me
+
+  * Head the Automotive Division, at Zilogic Systems
+
+  * Work with Automotive OEMs and Tier 1s
+
+  * Built several test frameworks for automotive testing
+
+  * Share insights on how Robot Framework can be used for test automation
+    with focus on embedded systems
+
+=== Background on Automotive
+
+image::figures/can-bus.png[align="center",width="50%"]
+
+  * Network of Embedded Computers
+    - Driver Information, Navigation, Music, Locking, Deploying Airbags
+
+  * Embedded Computers == Electronics Control Units
+
+=== Background on Automotive
+
+==== Left
+
+image::vt-system.jpg[align="center"]
+
+==== Right
+
+  * Feature Explosion - increase in Complexity of ECUs
+  * Stronghold of Proprietary Test Automation Tools
+    - Vector VT System
+    - dSPACE SCALEXIO
+  * Python and Robot Framework in Automotive Testing
+
+=== Overview
+
+  * The ECU: HUD Digital Cluster (5 min)
+  * Automating the DUT with Python (5 min)
+  * Writing Test Cases in Robot Framework (10 min)
+
+== The ECU: HUD Digital Cluster
+
+=== Off The Shelf HUD Digital Clusters
+
+image::hud-1.jpg[align="center",width="50%"]
+
+=== OBD-II Port
+
+==== Left
+image::mycar.jpg[align="center"]
+
+==== Right
+image::mycar2.jpg[width="45%",align="center"]
+
+=== OBD-II Port
+
+==== Left
+
+  * HUD Digital Clusters work by connecting to OBD-II port of the vehicle.
+
+  * CAN is one of the protocols used in the OBD-II port.
+
+==== Right
+image::mycar2.jpg[width="45%",align="center"]
+
+
+=== CAN Bus
+
+image::figures/can-bus.png[width="50%",align="center"]
+
+  * Multiple nodes are connected in network.
+  * 8 byte messages are broadcasted to other nodes
+  * Example: Speed sensor node periodically broadcast the vehicle speed
+  * Example: Dashboard node receives and displays it on the speed gauge
+
+== Automating the DUT with Python
+
+=== Interfaces
+
+==== Left
+
+  * The device under test has four interfaces:
+
+    1. Display
+    2. 4 x Buttons
+    3. OBD-II
+    4. Power
+
+  * Control the input interfaces
+  * Capture the output interfaces
+
+==== Right
+
+image::figures/obd2-hud-blocks.png[]
+
+=== Display
+
+==== Left
+
+image::rpi-camera.webp[align="center"]
+
+------
+img = display.take_screenshot()
+img = display.crop(img, rect)
+text = display.ocr(img)
+------
+
+==== Right
+
+  * Display has various gauges for Speed, Odometer, Trip meter, Engine
+    Temperature, etc.
+
+  * Captured using camera, a good webcam or RaspberryPi Camera can be used.
+
+  * Image processing libraries
+    - OpenCV
+    - Tesseract
+
+=== 4 x Buttons
+
+image::figures/solenoid.png[width="50%",align="center"]
+
+  * Buttons are used with the configuration menu
+  * Push-Pull Solenoid - coil, metal plunger, spring
+  * 4 solenoids positioned over the 4 buttons
+  * Python API
++
+------
+button.short_press(name)
+button.long_press(name)
+------
+
+=== OBD-II
+
+==== Left
+
+image::usb-can.jpg[align="center"]
+
+==== Right
+
+  * CAN to USB adaptor.
+  * Python module: python-can.
+  * Python API: `VehicleSim`
++
+------
+start_vehicle_simulation()
+stop_vehicle_simulation()
+set_vehicle_param(key, value)
+------
+
+=== Power
+
+ * Power to the DUT
+ * Relay hardware connected to the test PC.
+ * Python API
++
+------
+power.turn_on_dut()
+power.turn_off_dut()
+------
+
+=== Test Setup
+
+image::figures/test-setup.png[align="center"]
+
+=== Test Setup
+
+image::setup-photo.jpg[align="center",width="80%"]
+
+== Writing Test Cases in Robot Framework
+
+=== BDD Test Case
+
+------
+Given the DUT is ON and Engaged
+When the vehicle is moving at 100kmph
+Then verify speed gauge displayed speed >= 100kmph
+And verify speed gauge displayed speed <= 105kmph
+------
+
+  * When the vehicle is moving at 100kmph
+  * The speed sensor would send the speed as a CAN message
+  * Digital Cluster receives the CAN message
+  * Displays the speed on the speed gauge
+
+=== Test Suite in Robot Framework
+
+Code Goes Here ...
+
+=== Robot Test Suite Walkthrough
+
+  * Test Case: "Test to Verify Vehicle Speed Display"
+  * Keyword specifies an operation to be performed
+  * Keyword invocations `<=>` function invocations
+  * Fundamental keywords in Python
+  * High level keywords in Robot
+  * Combination of fundamental keywords
+
+=== Robot Test Suite Walkthrough (Contd)
+
+  * Test case fails if any of the keywords raises an exception
+  * Test case contains two kinds of keywords
+
+    1. Action keywords
+    2. Verification keywords
+
+=== Adding More Test Cases
+
+------
+Test to Verify Vehicle Speed Display 100
+    Given DUT is ON and Engaged
+    When vehicle is moving at 100kmph
+    Then verify speed gauge displayed speed >= 100kmph
+    And verify speed gauge displayed speed <= 105kmph
+
+Test to Verify Vehicle Speed Display 50
+    Given DUT is ON and Engaged
+    When vehicle is moving at 50kmph
+    Then verify speed gauge displayed speed >= 50kmph
+    And verify speed gauge displayed speed <= 52kmph
+------
+
+=== Adding More Speed Test Cases
+
+  * Keyword without arguments
++
+------
+Verify speed gauge displayed speed >= 100kmph
+    ${speed}=  Get Displayed Speed
+    Should be True  ${speed} >= 100
+------
++
+  * Keyword using embedded arguments
++
+------
+Verify speed gauge displayed speed >= ${expected}kmph
+    ${displayed}=  Get Displayed Speed
+    Should be True  ${displayed} >= ${expected}
+------
+
+=== Separation of Concern
+
+  * Robot framework tries to make it possible to write test cases using plain
+    English
+
+  * Idea is to make writing cases easy for domain experts
+
+  * Implementation of test libraries can be done independently by
+    test automation experts
+
+  * Robot Framework provides a mechanism to map high level test cases to low
+    level test libraries
+
+=== Test Case: Check Version
+
+  * Keyword for Entering About Screen
++
+-------
+Entered About Screen
+    Long Press  ESC
+    Repeat Keyword  6 times  Short Press  Down
+    Short Press  OK
+-------
++
+   * Test Case for Verify Software Version
++
+-------
+Test to Verify Software Version
+    Given DUT is ON and Engaged
+    When Entered About Screen
+    Then Version in About Screen Should be 1.1.6
+-------
+
+== Concluding Notes
+
+=== Key Takeaways
+
+  * Automotive systems are getting increasingly complex. Testing and validating
+    these systems is getting harder.
+
+  * A combination of hardware and software tools can be used to automate each
+    interface of the DUT.
+
+  * Python the universal glue language allows all the interfaces to be
+    controlled from one environment.
+
+  * Test cases written in Robot Framework allows the test engineer to drive the
+    system into various scenarios, and to verify its functionality.
+
+=== Credits
+
+  * Test Setup Mechanical Design: My colleague Dhanasekar
+
+  * https://www.vecteezy.com/free-vector/car-top-view[Car Top View Vectors by Vecteezy]
+
+  * Vector VT System Picture from Vector Website
+
+  * PCAN USB Adaptor Picture from PEAK-System Website
+
+  * Solenoid Animation from https://www.electricsolenoidvalves.com/blog/how-a-2way-solenoid-valve-works/
+
+  * KONNWEI OBD-II HUD Cluster Photo from Amazon
+
+=== Pointers to Further Reading
+
+  * Parrot - https://github.com/zilogic-systems/parrot
+
+  * Demo Test Suite and Libraries - https://github.com/bravegnu/talk-test-automation-robot
+
+  * Robot Framework - https://robotframework.org/
+
+  * OBD-II / CAN - https://www.csselectronics.com/pages/obd2-explained-simple-intro
+
+== Questions
+
+== Backup Slides
+
+=== pytest vs Robot Framework
+
+==== Left
+
+image::test-pyramid.png[align="center"]
+
+==== Right
+
+  * Unit Testing vs Integration Testing / E2E
+
+  * Robot Framework is tuned for Integration Testing / E2E rather than Unit Testing.
+
+    - Re-run failed tests
+    - Multiple hours / days
+    - Capture detailed logs
+    - Libraries in multiple languages
